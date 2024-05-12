@@ -73,37 +73,44 @@ class MyHero extends SpriteComponent
   }
 }
 
+class EnemyConfig {
+  final double minSize;
+  final double maxSize;
+  final double baseSpeed;
+
+  EnemyConfig(
+      {required this.minSize, required this.maxSize, required this.baseSpeed});
+}
+
+Map<String, EnemyConfig> enemyConfigs = {
+  'creeper.png': EnemyConfig(minSize: 75.0, maxSize: 100.0, baseSpeed: 150.0),
+  'spider.png': EnemyConfig(minSize: 100.0, maxSize: 125.0, baseSpeed: 150.0),
+  // Adicionar novos inimigos aqui
+};
+
 class MyEnemy extends SpriteComponent
     with HasGameRef<MyGame>, CollisionCallbacks {
   Random random = Random();
   late double speed;
   late double initialSize;
 
-  static const Map<String, double> enemySprites = {
-    'creeper.png': 75.0,
-    'spider.png': 100.0,
-  };
-
-  void initializeSpeed() {
-    speed = 150.0 + random.nextDouble() * 150;
+  void initializeSpeed(String spriteName) {
+    var config = enemyConfigs[spriteName]!;
+    speed = config.baseSpeed + random.nextDouble() * 150;
   }
-
-  // Future<void> loadSpriteAndSetSize(String spriteName) async {
-  //   sprite = await Sprite.load(spriteName);
-  //   size = Vector2.all(enemySprites[spriteName]!);
-  // }
 
   Future<void> loadSpriteAndSetSize(String spriteName) async {
     sprite = await Sprite.load(spriteName);
-    double minSize = enemySprites[spriteName]!;
-    double maxSize = spriteName == 'creeper.png' ? 100.0 : 125.0;
-    double randomSize = minSize + random.nextDouble() * (maxSize - minSize);
+    var config = enemyConfigs[spriteName]!;
+    double randomSize = config.minSize +
+        random.nextDouble() * (config.maxSize - config.minSize);
     size = Vector2.all(randomSize);
+    speed = config.baseSpeed + random.nextDouble() * 150;
   }
 
   MyEnemy(String spriteName)
-      : super(size: Vector2.all(enemySprites[spriteName]!)) {
-    initializeSpeed();
+      : super(size: Vector2.all(enemyConfigs[spriteName]!.minSize)) {
+    initializeSpeed(spriteName);
     loadSpriteAndSetSize(spriteName);
   }
 
@@ -122,7 +129,7 @@ class MyEnemy extends SpriteComponent
     position.y =
         gameRef.groundHeight - size.y * (0.25 + random.nextDouble() * 0.25);
 
-    initializeSpeed();
+    initializeSpeed(spriteName);
     await loadSpriteAndSetSize(spriteName);
   }
 
@@ -155,7 +162,8 @@ class MyGame extends FlameGame
   double get groundHeight => size.y * 0.90;
 
   String getRandomEnemyType() {
-    return (Random().nextBool() ? 'creeper.png' : 'spider.png');
+    var keys = enemyConfigs.keys.toList();
+    return keys[Random().nextInt(keys.length)];
   }
 
   @override
@@ -175,8 +183,6 @@ class MyGame extends FlameGame
   }
 
   void resetGame() {
-    // myHero.position =
-    //     Vector2(size.x / 2 - myHero.size.x / 2, groundHeight - myHero.size.y);
     myHero.position = Vector2(10, groundHeight - myHero.size.y);
     myEnemy.position =
         Vector2(size.x + myEnemy.size.x, groundHeight - myEnemy.size.y * 0.5);
@@ -248,7 +254,6 @@ class MyGame extends FlameGame
   @override
   void render(Canvas canvas) {
     final Paint groundPaint = Paint()..color = Colors.transparent;
-    // final Rect skyRect = Rect.fromLTWH(0, 0, size.x, size.y * 0.90);
     final Rect groundRect =
         Rect.fromLTWH(0, size.y * 0.90, size.x, size.y * 0.10);
     final Rect fullScreenRect = Rect.fromLTWH(0, 0, size.x, size.y);
