@@ -88,9 +88,17 @@ class MyEnemy extends SpriteComponent
     speed = 150.0 + random.nextDouble() * 150;
   }
 
+  // Future<void> loadSpriteAndSetSize(String spriteName) async {
+  //   sprite = await Sprite.load(spriteName);
+  //   size = Vector2.all(enemySprites[spriteName]!);
+  // }
+
   Future<void> loadSpriteAndSetSize(String spriteName) async {
     sprite = await Sprite.load(spriteName);
-    size = Vector2.all(enemySprites[spriteName]!);
+    double minSize = enemySprites[spriteName]!;
+    double maxSize = spriteName == 'creeper.png' ? 100.0 : 125.0;
+    double randomSize = minSize + random.nextDouble() * (maxSize - minSize);
+    size = Vector2.all(randomSize);
   }
 
   MyEnemy(String spriteName)
